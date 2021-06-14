@@ -1,0 +1,59 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Blur Detector";
+}
+
+<div class="container">
+    <label>Detection level</label>
+    <input type="number" class="detect" value="20" name="detectlevel" max="100" onchange="ChangeVal(this.value)"/>
+    <br/>
+    <label>Image</label>
+    <input type="file" name="file" accept="image/*" class="image-input"/>
+    <button class="btn btn-success" onclick="AnalizeImage()">Sprawdź</button>
+    <br/>
+    <h3 class="blur-info"></h3>
+    <image class="source-img"/>
+</div>
+@{
+    <script type="text/javascript">
+        let detectEl = document.querySelector('.detect');
+        let detectionLevel;
+        ChangeVal = (val) => {
+            detectEl.value = val;
+            detectionLevel = val;
+        }
+        AnalizeImage = () => {
+            detectionLevel = detectEl.value;
+                let imgEl = document.querySelector('.source-img');
+                let input = document.querySelector('.image-input');
+                if (input.files[0]) {
+                    imgEl.src = URL.createObjectURL(input.files[0]);
+                    imgEl.onload = () =>{
+                        console.log("img exist");
+                        let src = cv.imread(imgEl);
+                        let dst = new cv.Mat();
+                        let men = new cv.Mat();
+                        let menO = new cv.Mat();
+                        cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
+                        // You can try more different parameters
+                        var t = cv.Laplacian(src, dst, cv.CV_64F, 1, 1, 0, cv.BORDER_DEFAULT);
+                        console.log(t, cv.meanStdDev(dst, menO, men), menO.data64F[0], men.data64F[0]);
+                        console.log(detectionLevel);
+                        if (men.data64F[0] < detectionLevel)
+                            document.querySelector('.blur-info').textContent = "Image is Blurred";
+                        else
+                            document.querySelector('.blur-info').textContent = "Image is not Blurred";
+                        src.delete(); dst.delete();
+                    }
+                }
+                else {
+                    console.log("yes")
+                }
+        }
+        onOpenCvReady = () => {
+            console.log("openCv exist");
+        }
+    </script>
+    }
+    <script src="./js/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
